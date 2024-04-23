@@ -23,6 +23,7 @@ public class EmployeeInMemoryRepositoryTest {
 
 	@BeforeEach
 	public void setup() {
+
 		employees = new ArrayList<>();
 		employeeRepository = new EmployeeInMemoryRepository(employees);
 	}
@@ -36,7 +37,8 @@ public class EmployeeInMemoryRepositoryTest {
 	 */
 	@Test
 	public void testEmployeeRepositoryFindAll() {
-
+		Employee empleado1 = new Employee("A", 1000);
+		Employee empleado2 = new Employee("B", 1000);
 	}
 
 	/**
