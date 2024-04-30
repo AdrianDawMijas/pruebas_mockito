@@ -12,6 +12,7 @@ import org.mockito.*;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class EmployeeManagerTest {
 
@@ -218,8 +219,11 @@ public class EmployeeManagerTest {
 	 */
 	@Test
 	public void testPayEmployeesWhenBankServiceThrowsException() {
-
-	}
+			when(employeeRepository.findAll()).thenReturn(Collections.singletonList(notToBePaid));
+			doThrow(new RuntimeException()).when(bankService).pay(anyString(),anyDouble());
+			assertThat(employeeManager.payEmployees()).isEqualTo(0);
+			verify(notToBePaid).setPaid(false);
+	 }
 
 	/**
 	 * Descripcion del test:
@@ -239,8 +243,11 @@ public class EmployeeManagerTest {
 		ArrayList<Employee> employees = new ArrayList<>();
 		employees.add(notToBePaid);
 		employees.add(toBePaid);
+		when(employeeRepository.findAll()).thenReturn(employees);
 		doThrow(new RuntimeException()).doNothing().when(bankService).pay(anyString(),anyDouble());
 		assertThat(employeeManager.payEmployees()).isEqualTo(1);
+		verify(notToBePaid).setPaid(false);
+		verify(toBePaid).setPaid(true);
 
 	}
 
@@ -261,7 +268,14 @@ public class EmployeeManagerTest {
 	 */
 	@Test
 	public void testArgumentMatcherExample() {
-
+		ArrayList<Employee> employees = new ArrayList<>();
+		employees.add(notToBePaid);
+		employees.add(toBePaid);
+		when(employeeRepository.findAll()).thenReturn(employees);
+		doThrow(new RuntimeException()).doNothing().when(bankService).pay(argThat(s -> s.equals("1")),anyDouble());
+		assertThat(employeeManager.payEmployees()).isEqualTo(1);
+		verify(notToBePaid).setPaid(false);
+		verify(toBePaid).setPaid(true);
 	}
 
 }
