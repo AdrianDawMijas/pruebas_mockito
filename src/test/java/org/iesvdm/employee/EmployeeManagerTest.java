@@ -8,12 +8,10 @@ import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
+import org.mockito.*;
+
+import java.awt.*;
+import java.util.ArrayList;
 
 public class EmployeeManagerTest {
 
@@ -57,6 +55,8 @@ public class EmployeeManagerTest {
 	@Test
 	public void testPayEmployeesReturnZeroWhenNoEmployeesArePresent() {
 
+		when(employeeRepository.findAll()).thenReturn(new ArrayList<Employee>());
+		assertThat(employeeManager.payEmployees()).isZero();
 	}
 
 	/**
@@ -71,7 +71,12 @@ public class EmployeeManagerTest {
 	 */
 	@Test
 	public void testPayEmployeesReturnOneWhenOneEmployeeIsPresentAndBankServicePayPaysThatEmployee() {
-
+		Employee employee = new Employee("1", 1000);
+		ArrayList<Employee> employees = new ArrayList<>();
+		employees.add(employee);
+		when(employeeRepository.findAll()).thenReturn(employees);
+		assertThat(employeeManager.payEmployees()).isOne();
+		verify(bankService, times(1)).pay("1",1000);
 	}
 
 
@@ -88,7 +93,16 @@ public class EmployeeManagerTest {
 	 */
 	@Test
 	public void testPayEmployeesWhenSeveralEmployeeArePresent() {
-
+		Employee employee = new Employee("1", 1000);
+		Employee employee2 = new Employee("2", 2000);
+		ArrayList<Employee> employees = new ArrayList<>();
+		employees.add(employee);
+		employees.add(employee2);
+		when(employeeRepository.findAll()).thenReturn(employees);
+		assertThat(employeeManager.payEmployees()).isEqualTo(2);
+		verify(bankService, times(1)).pay("1",1000);
+		verify(bankService, times(1)).pay("2",2000);
+		verifyNoMoreInteractions(bankService);
 	}
 
 	/**
@@ -103,7 +117,17 @@ public class EmployeeManagerTest {
 	 */
 	@Test
 	public void testPayEmployeesInOrderWhenSeveralEmployeeArePresent() {
-
+		Employee employee = new Employee("1", 1000);
+		Employee employee2 = new Employee("2", 2000);
+		ArrayList<Employee> employees = new ArrayList<>();
+		employees.add(employee);
+		employees.add(employee2);
+		when(employeeRepository.findAll()).thenReturn(employees);
+		assertThat(employeeManager.payEmployees()).isEqualTo(2);
+		InOrder inOrder = inOrder(bankService);
+		inOrder.verify(bankService, times(1)).pay("1",1000);
+		inOrder.verify(bankService, times(1)).pay("2",2000);
+		inOrder.verifyNoMoreInteractions();
 	}
 
 	/**
@@ -116,7 +140,18 @@ public class EmployeeManagerTest {
 	 */
 	@Test
 	public void testExampleOfInOrderWithTwoMocks() {
-
+		Employee employee = new Employee("1", 1000);
+		Employee employee2 = new Employee("2", 2000);
+		ArrayList<Employee> employees = new ArrayList<>();
+		employees.add(employee);
+		employees.add(employee2);
+		when(employeeRepository.findAll()).thenReturn(employees);
+		assertThat(employeeManager.payEmployees()).isEqualTo(2);
+		InOrder inOrder = inOrder(bankService,employeeRepository);
+		inOrder.verify(employeeRepository).findAll();
+		inOrder.verify(bankService, times(1)).pay("1",1000);
+		inOrder.verify(bankService, times(1)).pay("2",2000);
+		inOrder.verifyNoMoreInteractions();
 	}
 
 
@@ -135,7 +170,16 @@ public class EmployeeManagerTest {
 	 */
 	@Test
 	public void testExampleOfArgumentCaptor() {
-
+		Employee employee = new Employee("1", 1000);
+		Employee employee2 = new Employee("2", 2000);
+		ArrayList<Employee> employees = new ArrayList<>();
+		employees.add(employee);
+		employees.add(employee2);
+		when(employeeRepository.findAll()).thenReturn(employees);
+		assertThat(employeeManager.payEmployees()).isEqualTo(2);
+		verify(bankService,times(2)).pay(idCaptor.capture(),amountCaptor.capture());
+		assertThat(idCaptor.getValue()).isEqualTo("2");
+		assertThat(amountCaptor.getValue()).isEqualTo(2000);
 	}
 
 	/**
@@ -149,6 +193,13 @@ public class EmployeeManagerTest {
 	 */
 	@Test
 	public void testEmployeeSetPaidIsCalledAfterPaying() {
+			ArrayList<Employee> employees = new ArrayList<>();
+			employees.add(toBePaid);
+			when(employeeRepository.findAll()).thenReturn(employees);
+			assertThat(employeeManager.payEmployees()).isEqualTo(1);
+			InOrder inOrder = inOrder(bankService,toBePaid);
+			inOrder.verify(bankService).pay(toBePaid.getId(),toBePaid.getSalary());
+			inOrder.verify(toBePaid).setPaid(true);
 
 	}
 
@@ -185,6 +236,12 @@ public class EmployeeManagerTest {
 	 */
 	@Test
 	public void testOtherEmployeesArePaidWhenBankServiceThrowsException() {
+		ArrayList<Employee> employees = new ArrayList<>();
+		employees.add(notToBePaid);
+		employees.add(toBePaid);
+		doThrow(new RuntimeException()).doNothing().when(bankService).pay(anyString(),anyDouble());
+		assertThat(employeeManager.payEmployees()).isEqualTo(1);
+
 	}
 
 

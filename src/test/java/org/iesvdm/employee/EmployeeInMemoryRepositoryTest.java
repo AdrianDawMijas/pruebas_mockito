@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.assertj.core.api.Assertions;
@@ -39,6 +40,12 @@ public class EmployeeInMemoryRepositoryTest {
 	public void testEmployeeRepositoryFindAll() {
 		Employee empleado1 = new Employee("A", 1000);
 		Employee empleado2 = new Employee("B", 1000);
+		employees.add(empleado1);
+		employees.add(empleado2);
+		List<Employee> listaObtenida = employeeRepository.findAll();
+		assertThat(listaObtenida.size()).isEqualTo(2);
+		assertThat(listaObtenida.contains(empleado1)).isTrue();
+		assertThat(listaObtenida.contains(empleado2)).isTrue();
 	}
 
 	/**
@@ -49,6 +56,10 @@ public class EmployeeInMemoryRepositoryTest {
 	 */
 	@Test
 	public void testEmployeeRepositorySaveNewEmployee() {
+		Employee empleado1 = new Employee("A", 1000);
+		employeeRepository.save(empleado1);
+		assertThat(employees.size()==1).isTrue();
+		assertThat(employees.contains(empleado1)).isTrue();
 
 	}
 
@@ -63,6 +74,13 @@ public class EmployeeInMemoryRepositoryTest {
 	 */
 	@Test
 	public void testEmployeeRepositorySaveExistingEmployee() {
-
+		Employee empleado1 = new Employee("A", 1000);
+		Employee empleado2 = new Employee("B", 1300);
+		employees.add(empleado1);
+		employees.add(empleado2);
+		empleado2.setSalary(1500);
+		employeeRepository.save(empleado2);
+		int indiceEmpleado2 = employees.indexOf(empleado2);
+		assertThat(employees.get(indiceEmpleado2).getSalary()).isEqualTo(1500);
 	}
 }
